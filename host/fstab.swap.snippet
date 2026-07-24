@@ -1,0 +1,10 @@
+# Ensure 4G swap exists (already present on server1 as /swapfile).
+# On a fresh host, after creating the file:
+#
+#   fallocate -l 4G /swapfile
+#   chmod 600 /swapfile
+#   mkswap /swapfile
+#   swapon /swapfile
+#
+# Then add this line to /etc/fstab if missing:
+/swapfile none swap sw 0 0

@@ -1,0 +1,13 @@
+# Local secrets / machine-specific
+.env
+*.pem
+*.key
+*.p12
+!certbot/renewal-hooks/**/*
+
+# Editor / OS
+.DS_Store
+*.swp
+*~
+.idea/
+.vscode/
