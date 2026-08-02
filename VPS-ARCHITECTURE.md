@@ -163,6 +163,8 @@ Document new ports here when deploying. Update this table in git (`tsvdev-infra`
 | 443 | TCP | nginx HTTPS | in use |
 | 46789 | TCP | SSH | in use |
 | 7777 | TCP | TradeShots game server (Docker) | in use |
+| 8572 | TCP | SmartBooks app (Docker, `127.0.0.1` only, behind nginx) | in use |
+| 55433 | TCP | SmartBooks Postgres (Docker, `127.0.0.1` only, operator tooling) | in use |
 
 Pick unused ports above 1024 for new services.
 
@@ -353,7 +355,7 @@ Shared snippet: `/etc/nginx/snippets/tsvdev-proxy-params.conf` (from repo).
 
 | Config file | Domain | Upstream | Status |
 |-------------|--------|----------|--------|
-| *(none)* | — | — | Platform ready; add sites under `nginx/sites-available/` |
+| `smartbooks.tsvdev.com.conf` | smartbooks.tsvdev.com | `127.0.0.1:8572` | active (project: `/home/rob/smartbooks/`) |
 
 ### Common nginx commands
 
