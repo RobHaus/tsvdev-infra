@@ -163,8 +163,12 @@ Document new ports here when deploying. Update this table in git (`tsvdev-infra`
 | 443 | TCP | nginx HTTPS | in use |
 | 46789 | TCP | SSH | in use |
 | 7777 | TCP | TradeShots game server (Docker) | in use |
-| 8572 | TCP | SmartBooks app (Docker, `127.0.0.1` only, behind nginx) | in use |
-| 55433 | TCP | SmartBooks Postgres (Docker, `127.0.0.1` only, operator tooling) | in use |
+| 8572 | TCP | DiaryIQ app, production (Docker, `127.0.0.1` only, behind nginx) | in use |
+| 8573 | TCP | DiaryIQ app, staging (Docker, `127.0.0.1` only, behind nginx) | in use |
+| 8574 | TCP | DiaryIQ app, dev (Docker, `127.0.0.1` only, not proxied) | in use |
+| 55432 | TCP | DiaryIQ Postgres, dev (Docker, `127.0.0.1` only) | in use |
+| 55433 | TCP | DiaryIQ Postgres, production (Docker, `127.0.0.1` only, operator tooling) | in use |
+| 55434 | TCP | DiaryIQ Postgres, staging (Docker, `127.0.0.1` only, operator tooling) | in use |
 
 Pick unused ports above 1024 for new services.
 
@@ -355,7 +359,9 @@ Shared snippet: `/etc/nginx/snippets/tsvdev-proxy-params.conf` (from repo).
 
 | Config file | Domain | Upstream | Status |
 |-------------|--------|----------|--------|
-| `smartbooks.tsvdev.com.conf` | smartbooks.tsvdev.com | `127.0.0.1:8572` | active (project: `/home/rob/smartbooks/`) |
+| `diaryiq.com.conf` | diaryiq.com (www → apex) | `127.0.0.1:8572` | active (project: `/home/rob/diaryiq/`) |
+| `staging.diaryiq.com.conf` | staging.diaryiq.com | `127.0.0.1:8573` | active, basic auth + noindex (project: `/home/rob/diaryiq-staging/`) |
+| `smartbooks.tsvdev.com.conf` | smartbooks.tsvdev.com | `127.0.0.1:8572` (`/v1/` only) | legacy redirect, retire when no extension points at it |
 
 ### Common nginx commands
 
