@@ -353,7 +353,25 @@ Update the Port Registry in this file and add a `README.md` in the project folde
 
 Configs are managed in **`tsvdev-infra/nginx/`** and applied with `sudo ./scripts/apply-nginx.sh`.
 
-Shared snippet: `/etc/nginx/snippets/tsvdev-proxy-params.conf` (from repo).
+Every `.conf` in `nginx/snippets/` is installed to `/etc/nginx/snippets/tsvdev-<name>.conf`. That directory is shared with the distribution and with certbot, hence the prefix.
+
+| Snippet | Purpose |
+|---------|---------|
+| `tsvdev-proxy-params.conf` | Shared proxy headers. Sets `X-Forwarded-For` to one observed address rather than appending to what the client sent, so an upstream reading it is not reading client input. |
+| `tsvdev-cloudflare-real-ip.conf` | Lets Cloudflare peers, and only Cloudflare peers, declare the visitor address via `CF-Connecting-IP`. Include it in any server block for a proxied name, otherwise logs and upstreams see a Cloudflare address shared by every visitor. |
+
+### Before applying
+
+```bash
+./scripts/validate-nginx.sh      # container-based, no root, no effect on the host
+sudo ./scripts/apply-nginx.sh
+```
+
+`validate-nginx.sh` parses every site config against stand-in certificates and then asserts the client address rules against a live nginx with an echo upstream. Cloudflare adds ranges occasionally, so refresh the trusted set and commit the diff when it changes:
+
+```bash
+./scripts/update-cloudflare-ips.sh
+```
 
 ### Active vhosts
 

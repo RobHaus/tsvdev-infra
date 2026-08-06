@@ -16,11 +16,16 @@ fi
 
 install -d -m 755 "$DST_SITES" "$DST_ENABLED" "$DST_SNIPPETS"
 
-if [[ -f "$SRC_SNIPPETS/proxy-params.conf" ]]; then
-  install -m 644 "$SRC_SNIPPETS/proxy-params.conf" "$DST_SNIPPETS/tsvdev-proxy-params.conf"
-fi
-
 shopt -s nullglob
+
+# /etc/nginx/snippets is shared with the distribution and with certbot, so
+# everything from this repo lands under a tsvdev- prefix.
+for snippet in "$SRC_SNIPPETS"/*.conf; do
+  base="$(basename "$snippet")"
+  install -m 644 "$snippet" "$DST_SNIPPETS/tsvdev-$base"
+  echo "snippet tsvdev-$base"
+done
+
 for conf in "$SRC_SITES"/*.conf; do
   base="$(basename "$conf")"
   install -m 644 "$conf" "$DST_SITES/$base"
