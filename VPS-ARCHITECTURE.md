@@ -169,6 +169,7 @@ Document new ports here when deploying. Update this table in git (`tsvdev-infra`
 | 55432 | TCP | DiaryIQ Postgres, dev (Docker, `127.0.0.1` only) | in use |
 | 55433 | TCP | DiaryIQ Postgres, production (Docker, `127.0.0.1` only, operator tooling) | in use |
 | 55434 | TCP | DiaryIQ Postgres, staging (Docker, `127.0.0.1` only, operator tooling) | in use |
+| 55435 | TCP | DiaryIQ Postgres, integration tests (Docker, `127.0.0.1` only, tmpfs, started by the test run) | in use |
 
 Pick unused ports above 1024 for new services.
 
