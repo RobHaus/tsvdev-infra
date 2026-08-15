@@ -89,7 +89,7 @@ SSH policy fragment is managed in `tsvdev-infra` as `ssh/sshd_config.d/99-tsvdev
               ┌─────────────────────────┼─────────────────────────┐
               │                         │                         │
               ▼                         ▼                         ▼
-     Cloudflare (optional)        Direct to IP              SSH :46789
+     Cloudflare (required)        Direct to IP              SSH :46789
      HTTP/S only, orange cloud     Game traffic MUST          Key auth
               │                   use this path (or grey-cloud DNS)
               ▼                         │
@@ -118,6 +118,10 @@ SSH policy fragment is managed in `tsvdev-infra` as `ssh/sshd_config.d/99-tsvdev
 
 **Cloudflare orange-cloud (proxied) only supports HTTP/HTTPS.** Game clients cannot connect through the Cloudflare proxy. For game subdomains, set the DNS record to **DNS only (grey cloud)** so it resolves directly to `162.0.236.23`.
 
+Every web hostname must be orange-clouded, because UFW only admits Cloudflare on
+80 and 443. A grey cloud on a web name is not a way to bypass the proxy; it is a
+way to take the site offline.
+
 ### Why nginx stays on the host
 
 Managed by `tsvdev-infra`. Host nginx + certbot is intentional: thin HTTP proxy, reliable ACME renewals (`certbot.timer`), no Docker/`iptables` fights on :80/:443. There is **no** shared Docker “proxy” network — web apps publish to `127.0.0.1` only.
@@ -130,12 +134,37 @@ Default policy: **deny incoming**, allow outgoing.
 
 Baseline rules (from `tsvdev-infra/ufw/rules.sh`):
 
-| Rule | Port | Purpose |
-|------|------|---------|
-| 80/tcp | HTTP | nginx (certbot challenges + redirects) |
-| 443/tcp | HTTPS | nginx |
-| 46789/tcp | SSH | Admin access |
-| 7777/tcp | Game | TradeShots |
+| Rule | Port | Source | Purpose |
+|------|------|--------|---------|
+| 80/tcp | HTTP | Cloudflare ranges only | nginx (ACME challenges + redirects) |
+| 443/tcp | HTTPS | Cloudflare ranges only | nginx |
+| 46789/tcp | SSH | anywhere | Admin access |
+| 7777/tcp | Game | anywhere | TradeShots |
+
+**Web traffic is restricted to Cloudflare.** Every name this host serves over
+HTTP is proxied, so a connection arriving on 80 or 443 from anywhere else is one
+that skipped Cloudflare, and everything Cloudflare provides was optional from the
+caller's point of view. The origin address is not secret and cannot be made
+secret, so the origin has to refuse rather than hide.
+
+The ranges live in `ufw/cloudflare-ranges.txt` and are regenerated with the nginx
+snippet by one script, so the firewall and nginx cannot disagree about who
+Cloudflare is:
+
+```bash
+./scripts/update-cloudflare-ips.sh   # review the diff, commit
+sudo ./ufw/rules.sh
+```
+
+Two consequences worth knowing:
+
+- **A name taken off the Cloudflare proxy stops answering.** Grey-clouding a web
+  hostname now takes it off the internet rather than exposing the origin. Game
+  hostnames are unaffected: their ports are opened separately and never proxied.
+- **If Cloudflare is the problem**, `sudo ALLOW_DIRECT_WEB=1 ./ufw/rules.sh`
+  opens 80 and 443 to everyone until the script is run again without it. SSH is
+  never restricted here, so a mistake in the web rules locks out the web, not the
+  operator.
 
 **Every additional game port must be explicitly opened.** Example:
 
@@ -433,7 +462,7 @@ sudo certbot delete --cert-name mygame.tsvdev.com
 - SSH: port 46789, key-only authentication
 - Root SSH login is enabled — consider disabling once `rob` key access is confirmed
 - Do not commit `.env` files with secrets
-- Cloudflare hides origin IP for proxied HTTP hosts; game ports expose the origin IP directly
+- Web traffic reaches nginx only from Cloudflare ranges, so the proxy cannot be skipped; game ports expose the origin IP directly and are not covered by that
 - Keep Docker images pinned and updated for security patches
 
 ---
